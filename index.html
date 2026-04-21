@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HM·Ops — Central de Operações</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HM·Ops">
+<meta name="theme-color" content="#fafaf9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:     #1c1917; --ink2: #44403c; --ink3: #78716c; --ink4: #a8a29e;
+  --paper:   #fafaf9; --paper2: #f5f5f4; --paper3: #e7e5e4; --paper4: #d6d3d1;
+  --green:   #166534; --gmid: #16a34a; --glite: #f0fdf4; --gbrd: #bbf7d0;
+  --blue:    #1e40af; --bmid: #2563eb; --blite: #eff6ff; --bbrd: #bfdbfe;
+  --amber:   #92400e; --amid: #d97706; --alite: #fffbeb; --abrd: #fde68a;
+  --purple:  #5b21b6; --pmid: #7c3aed; --plite: #f5f3ff; --pbrd: #ddd6fe;
+  --serif:   'Fraunces', Georgia, serif;
+  --sans:    'DM Sans', sans-serif;
+  --mono:    'DM Mono', monospace;
+}
+
+html, body { height: 100%; font-family: var(--sans); background: var(--paper2); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+/* ── Layout ───────────────────────────────────── */
+.shell {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Topbar ───────────────────────────────────── */
+.topbar {
+  background: var(--paper);
+  border-bottom: 1px solid var(--paper3);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  z-index: 100;
+}
+.brand {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -.3px;
+  margin-right: 24px;
+  white-space: nowrap;
+}
+.brand em { font-style: italic; font-weight: 300; color: var(--gmid); }
+.brand span { color: var(--paper4); }
+
+/* ── Tabs de navegação ────────────────────────── */
+.tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  gap: 2px;
+  flex: 1;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+  user-select: none;
+}
+.tab:hover { color: var(--ink); background: var(--paper2); }
+.tab.active { color: var(--ink); border-bottom-color: var(--gmid); font-weight: 500; }
+.tab.active.work  { border-bottom-color: #c8943a; color: #92400e; }
+.tab.active.proj  { border-bottom-color: var(--gmid); color: var(--green); }
+.tab.active.com   { border-bottom-color: var(--bmid); color: var(--blue); }
+
+.tab-icon {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.tab-icon.work   { background: #fffbeb; border: 1px solid #fde68a; }
+.tab-icon.proj   { background: var(--glite); border: 1px solid var(--gbrd); }
+.tab-icon.com    { background: var(--blite); border: 1px solid var(--bbrd); }
+
+/* ── Conteúdo — iframes ───────────────────────── */
+.content { position: relative; overflow: hidden; background: var(--paper2); }
+
+.frame-wrap {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+}
+.frame-wrap.active { display: flex; }
+
+.app-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+  background: var(--paper);
+}
+
+/* ── Ecrã de boas-vindas ──────────────────────── */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 40px;
+  padding: 40px;
+}
+.welcome-title {
+  font-family: var(--serif);
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.3;
+}
+.welcome-title em { font-style: italic; color: var(--gmid); }
+.welcome-sub {
+  font-size: 14px;
+  color: var(--ink3);
+  text-align: center;
+  max-width: 400px;
+  line-height: 1.6;
+}
+.app-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 720px;
+}
+.app-card {
+  background: var(--paper);
+  border: 1px solid var(--paper3);
+  border-radius: 14px;
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.app-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.1);
+  border-color: var(--paper4);
+}
+.app-card.work:hover  { border-color: #fde68a; background: #fffdf5; }
+.app-card.proj:hover  { border-color: var(--gbrd); background: var(--glite); }
+.app-card.com:hover   { border-color: var(--bbrd); background: var(--blite); }
+
+.app-card-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 14px;
+}
+.app-card.work .app-card-icon { background: #fffbeb; border: 1px solid #fde68a; }
+.app-card.proj .app-card-icon { background: var(--glite); border: 1px solid var(--gbrd); }
+.app-card.com  .app-card-icon { background: var(--blite); border: 1px solid var(--bbrd); }
+
+.app-card-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.app-card.work .app-card-name { color: #92400e; }
+.app-card.proj .app-card-name { color: var(--green); }
+.app-card.com  .app-card-name { color: var(--blue); }
+
+.app-card-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+/* ── Barra de estado ──────────────────────────── */
+.statusbar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 16px;
+  background: var(--paper);
+  border-top: 1px solid var(--paper3);
+  font-size: 11px;
+  color: var(--ink4);
+  font-family: var(--mono);
+}
+.statusbar.visible { display: flex; }
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gmid);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── Loader ───────────────────────────────────── */
+.loader {
+  position: absolute;
+  inset: 0;
+  background: var(--paper2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 10;
+  transition: opacity .3s;
+}
+.loader.hidden { opacity: 0; pointer-events: none; }
+.loader-dots {
+  display: flex; gap: 6px;
+}
+.loader-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--paper4);
+  animation: bounce .8s infinite;
+}
+.loader-dot:nth-child(2) { animation-delay: .15s; }
+.loader-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px);background:var(--gmid); } }
+.loader-text { font-size: 12px; color: var(--ink4); font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="brand" onclick="mostrarInicio()" style="cursor:pointer;">HM<span>·</span><em>Ops</em></div>
+    <nav class="tabs">
+      <div class="tab work" data-app="work" onclick="abrirApp('work')">
+        <div class="tab-icon work">⚙</div>
+        Work·Kit
+      </div>
+      <div class="tab proj" data-app="proj" onclick="abrirApp('proj')">
+        <div class="tab-icon proj">◻</div>
+        Projetos LM
+      </div>
+      <div class="tab com" data-app="com" onclick="abrirApp('com')">
+        <div class="tab-icon com">✉</div>
+        Comunicação LM
+      </div>
+    </nav>
+  </header>
+
+  <!-- Conteúdo -->
+  <main class="content" id="content">
+
+    <!-- Ecrã inicial -->
+    <div class="frame-wrap active" id="frame-inicio">
+      <div class="welcome">
+        <div>
+          <div class="welcome-title">Bom dia, <em>Hélder</em></div>
+          <div class="welcome-sub" style="margin-top:10px;">Escolhe uma das ferramentas abaixo ou usa as tabs para navegar directamente.</div>
+        </div>
+        <div class="app-cards">
+          <div class="app-card work" onclick="abrirApp('work')">
+            <div class="app-card-icon">⚙</div>
+            <div class="app-card-name">HM Work·Kit</div>
+            <div class="app-card-desc">Biblioteca KC, orçamentos, tampos, mão de obra e IA</div>
+          </div>
+          <div class="app-card proj" onclick="abrirApp('proj')">
+            <div class="app-card-icon">◻</div>
+            <div class="app-card-name">Projetos LM</div>
+            <div class="app-card-desc">Gestão de propostas e acompanhamento de projectos</div>
+          </div>
+          <div class="app-card com" onclick="abrirApp('com')">
+            <div class="app-card-icon">✉</div>
+            <div class="app-card-name">Comunicação LM</div>
+            <div class="app-card-desc">Templates de mensagens para todas as situações</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Work·Kit -->
+    <div class="frame-wrap" id="frame-work">
+      <div class="loader" id="loader-work">
+        <div class="loader-dots">
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        </div>
+        <div class="loader-text">A carregar Work·Kit…</div>
+      </div>
+      <iframe class="app-frame" id="iframe-work"
+        title="HM Work·Kit">
+      </iframe>
+    </div>
+
+    <!-- Projetos LM -->
+    <div class="frame-wrap" id="frame-proj">
+      <div class="loader" id="loader-proj">
+        <div class="loader-dots">
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        </div>
+        <div class="loader-text">A carregar Projetos LM…</div>
+      </div>
+      <iframe class="app-frame" id="iframe-proj"
+        title="Projetos LM">
+      </iframe>
+    </div>
+
+    <!-- Comunicação LM -->
+    <div class="frame-wrap" id="frame-com">
+      <div class="loader" id="loader-com">
+        <div class="loader-dots">
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        </div>
+        <div class="loader-text">A carregar Comunicação LM…</div>
+      </div>
+      <iframe class="app-frame" id="iframe-com"
+        title="Comunicação LM">
+      </iframe>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+const URLS = {
+  work: 'https://hmlm90020798-alt.github.io/hm-work-kit/',
+  proj: 'https://hmlm90020798-alt.github.io/projetos-lm/',
+  com:  'https://hmlm90020798-alt.github.io/comunicacao-lm/',
+};
+
+const loaded = { work: false, proj: false, com: false };
+let appActual = null;
+
+function mostrarInicio() {
+  if (appActual) {
+    document.getElementById('frame-' + appActual).classList.remove('active');
+    document.querySelector(`[data-app="${appActual}"]`).classList.remove('active');
+    appActual = null;
+  }
+  document.getElementById('frame-inicio').classList.add('active');
+}
+
+function abrirApp(app) {
+  // Esconder início e app anterior
+  document.getElementById('frame-inicio').classList.remove('active');
+  if (appActual && appActual !== app) {
+    document.getElementById('frame-' + appActual).classList.remove('active');
+    document.querySelector(`[data-app="${appActual}"]`).classList.remove('active');
+  }
+
+  // Activar novo
+  appActual = app;
+  document.getElementById('frame-' + app).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`[data-app="${app}"]`).classList.add('active');
+
+  // Carregar iframe só na primeira vez
+  if (!loaded[app]) {
+    const iframe = document.getElementById('iframe-' + app);
+    iframe.src = URLS[app];
+  }
+}
+
+function frameLoaded(app) {
+  loaded[app] = true;
+  const loader = document.getElementById('loader-' + app);
+  if (loader) loader.classList.add('hidden');
+}
+
+// Registar Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/HMOps/sw.js').catch(() => {});
+}
+
+// Listeners de load dos iframes — só após DOM estar pronto
+document.addEventListener('DOMContentLoaded', () => {
+  ['work','proj','com'].forEach(app => {
+    const iframe = document.getElementById('iframe-' + app);
+    if (iframe) {
+      iframe.addEventListener('load', () => frameLoaded(app));
+    }
+  });
+});
+</script>
+
+</body>
+</html>
